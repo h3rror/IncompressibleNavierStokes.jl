@@ -1,7 +1,9 @@
 module ReducedOrderModels
 
 using IncompressibleNavierStokes
-using IncompressibleNavierStokes: apply_bc_u!
+# using IncompressibleNavierStokes: apply_bc_u!
+
+# using LinearAlgebra
 
 INS = IncompressibleNavierStokes
 
@@ -59,6 +61,8 @@ function create_snapshots(;
 
     (; u, t)
 end
+
+
 
 function rom_timestep_loop(; psolver)
     for i = 1:nstep

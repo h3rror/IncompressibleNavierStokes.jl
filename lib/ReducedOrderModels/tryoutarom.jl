@@ -59,7 +59,7 @@ end
 
 # map(f, [1, 2, 3]) = [f(1), f(2), f(3)]
 
-snap = stack(vecshots)
+snapmat = stack(vecshots)
 
 using LinearAlgebra
 U, S, V = svd(snapmat)

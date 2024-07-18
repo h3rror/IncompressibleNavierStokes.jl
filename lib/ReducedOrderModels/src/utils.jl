@@ -1,3 +1,5 @@
+using LinearAlgebra
+
 function tuple2vec(u,setup)
     Iu = setup.grid.Iu
     sx, sy = u
@@ -18,3 +20,17 @@ end
 
 export tuple2vec
 export vec2tuple
+
+function compute_POD_basis(snapshots,r,setup)
+    vecshots = map(snapshots.u) do u
+        tuple2vec(u,setup)
+    end
+
+    snapmat = stack(vecshots)
+
+    svd_ = svd(snapmat)
+
+    ϕ = svd_.U[:,1:r]
+
+    ϕ,svd_,snapmat
+end

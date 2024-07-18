@@ -1,6 +1,10 @@
 using ReducedOrderModels
 using Test
 
+using LinearAlgebra
+
+ROM = ReducedOrderModels
+
 @testset  "Arithmetic" begin
     @test 1+1 == 2
 end
@@ -13,8 +17,15 @@ end
         Δt = 0.01,
         n_snap = 100,
     )
-    @test length(snapshots) == 100
-    @test typeof(snapshots) == Vector{Tuple{Matrix{Float64}, Matrix{Float64}}}
+    @test length(snapshots.u) == 100
+    @test length(snapshots.t) == 100
+    @test typeof(snapshots.u) == Vector{Tuple{Matrix{Float64}, Matrix{Float64}}}
 
-    @test snapshots[1] == vec2tuple(tuple2vec(snapshots[1],setup),setup)
+    @test snapshots.u[1] == vec2tuple(tuple2vec(snapshots.u[1],setup),setup)
+
+    r = 10
+    ϕ,svd_,snapmat = ROM.compute_POD_basis(snapshots,r,setup)
+
+    @test ϕ'*ϕ ≈ I(r)
 end
+
