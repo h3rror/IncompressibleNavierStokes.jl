@@ -34,3 +34,11 @@ function compute_POD_basis(snapshots,r,setup)
 
     ϕ,svd_,snapmat
 end
+
+function rom_reconstruct(a,ϕ)
+    u = ϕ*a
+end
+
+function rom_project(u,ϕ)
+    a = ϕ'*u
+end

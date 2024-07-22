@@ -66,7 +66,7 @@ end
 
 function rom_timestep_loop(; psolver)
     for i = 1:nstep
-        u = reconstruct(a)
+        u = rom_reconstruct(a)
         apply_bc_u!(u, t, setup)
         F = momentum(u, t, setup)
         apply_bc_u!(F, t, setup; dudt = true)

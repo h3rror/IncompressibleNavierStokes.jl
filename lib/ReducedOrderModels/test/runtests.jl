@@ -27,5 +27,9 @@ end
     ϕ,svd_,snapmat = ROM.compute_POD_basis(snapshots,r,setup)
 
     @test ϕ'*ϕ ≈ I(r)
+
+    @test ROM.rom_project(ϕ,ϕ) ≈ I(r)
+    a = rand(10)
+    @test ROM.rom_project(ROM.rom_reconstruct(a,ϕ),ϕ) ≈ a
 end
 
