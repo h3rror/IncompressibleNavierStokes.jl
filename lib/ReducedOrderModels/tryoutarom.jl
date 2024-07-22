@@ -1,4 +1,6 @@
 using ReducedOrderModels
+ROM = ReducedOrderModels
+
 using IncompressibleNavierStokes
 
 # # Shear layer - 2D
@@ -37,7 +39,15 @@ snapshots = ReducedOrderModels.create_snapshots(;
     n_snap = 800,
 )
 
-snapshots.u
+r = 10
+ϕ,svd_,snapmat = ROM.compute_POD_basis(snapshots,r,setup)
+
+CairoMakie.activate!()
+scatter(svd_.S; axis = (; yscale = log10))
+
+astart = ROM.rom_project(tuple2vec(ustart,setup),ϕ)
+a,t = ROM.rom_timestep_loop(ϕ;setup,nstep = 10,astart)
+
 snapshots.u[1]
 snapshots.u[1][1]
 snapshots.u[1][1][setup.grid.Iu[1]]

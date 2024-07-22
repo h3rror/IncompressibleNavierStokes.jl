@@ -64,16 +64,43 @@ end
 
 
 
-function rom_timestep_loop(; psolver)
+"""
+    rom_timestep_loop(ϕ;
+    setup,
+    nstep,
+    astart,
+    Δt = 0.01,
+    tstart = 0,
+    psolver = default_psolver(setup),
+)
+
+    Simple time-stepping method for ROMs;
+    should later be replaced by multiple-dsipatching existing time-stepping code
+"""
+function rom_timestep_loop(ϕ;
+    setup,
+    nstep,
+    astart,
+    Δt = 0.01,
+    tstart = 0,
+    psolver = default_psolver(setup),
+)
+    a = astart
+    t = tstart
     for i = 1:nstep
-        u = rom_reconstruct(a)
-        apply_bc_u!(u, t, setup)
-        F = momentum(u, t, setup)
-        apply_bc_u!(F, t, setup; dudt = true)
-        dudt = project(F, setup; psolver)
-        dadt = rom_project(dudt)
+        u_vec = rom_reconstruct(a,ϕ)
+        u = vec2tuple(u_vec,setup)
+        INS.apply_bc_u!(u, t, setup)
+        F = INS.momentum(u, nothing, t, setup)
+        INS.apply_bc_u!(F, t, setup; dudt = true)
+        dudt = INS.project(F, setup; psolver)
+        dudt_vec = tuple2vec(dudt,setup)
+        dadt = rom_project(dudt_vec,ϕ)
         a = a + Δt * dadt
+        t = t + Δt
     end
+
+    a,t
 end
 
 
