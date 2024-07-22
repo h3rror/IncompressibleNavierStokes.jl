@@ -1,9 +1,13 @@
 using ReducedOrderModels
+ROM = ReducedOrderModels
+
+using IncompressibleNavierStokes
+INS = IncompressibleNavierStokes
+
 using Test
 
 using LinearAlgebra
 
-ROM = ReducedOrderModels
 
 @testset "Arithmetic" begin
     @test 1 + 1 == 2
@@ -35,4 +39,5 @@ end
 
     @test t ≈ nstep*Δt
     @test typeof(a) == typeof(astart)
+    @test norm(INS.divergence(vec2tuple(ROM.rom_reconstruct(a,ϕ),setup),setup)) < 1e-8
 end
