@@ -28,8 +28,11 @@ end
     @test ϕ' * ϕ ≈ I(r)
 
     @test ROM.rom_project(ϕ, ϕ) ≈ I(r)
-    a = rand(10)
-    @test ROM.rom_project(ROM.rom_reconstruct(a, ϕ), ϕ) ≈ a
+    a_rand = rand(r)
+    u_rand_vec = ROM.rom_reconstruct(a_rand,ϕ)
+    @test ROM.rom_project(u_rand_vec, ϕ) ≈ a_rand
+
+    u_rand = vec2tuple(u_rand_vec,setup)
 
     astart = ROM.rom_project(tuple2vec(ustart, setup), ϕ)
     nstep = 10
@@ -41,8 +44,8 @@ end
     @test norm(INS.divergence(vec2tuple(ROM.rom_reconstruct(a, ϕ), setup), setup)) < 1e-8
 
     D_r, y_D = ROM.rom_diffusion_operator(ϕ, setup)
-    @test D_r * astart + y_D ≈
-          ROM.rom_project(tuple2vec(INS.diffusion(ustart, setup), setup), ϕ)
+    @test D_r * a_rand + y_D ≈
+          ROM.rom_project(tuple2vec(INS.diffusion(u_rand, setup), setup), ϕ)
     # test symmetry and negative semi-definiteness of D_r
     @test maximum(eigen(D_r).values) <= 0
     @test D_r ≈ D_r'
@@ -54,4 +57,11 @@ end
 
     @test tuple2vec(u1, setup)' * tuple2vec(ROM.convection(u1, u2, setup), setup) < 1e-15 
     @test tuple2vec(u1, setup)' * tuple2vec(ROM.convection(u1, u1, setup), setup) < 1e-15
+
+    C_r2,C_r1,y_C = ROM.rom_convection_operator(ϕ,setup)
+    @test C_r2*kron(a_rand,a_rand) + C_r1*a_rand + y_C ≈
+            ROM.rom_project(tuple2vec(INS.convection(u_rand, setup), setup), ϕ)
+    # test block-skew-symmetry of C_r2
+    C_r2_tensor = reshape(C_r2,r,r,r)
+    @test norm(C_r2_tensor+permutedims(C_r2_tensor,[2 1 3])) <= sqrt(eps())
 end

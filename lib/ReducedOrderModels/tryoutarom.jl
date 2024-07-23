@@ -74,6 +74,7 @@ tuple2vec(u1,setup)'*tuple2vec(ROM.convection(u2,u1,setup),setup)
 tuple2vec(u1,setup)'*tuple2vec(ROM.convection(u1,u2,setup),setup)
 tuple2vec(u1,setup)'*tuple2vec(ROM.convection(u1,u1,setup),setup)
 
+C_r2,C_r1,y_C = ROM.rom_convection_operator(ϕ,setup)
 
 
 snapshots.u[1]

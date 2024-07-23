@@ -127,13 +127,33 @@ end
 """
     rom_convection_operator(ϕ, setup)
 
-TBW
+    precompute ROM diffusion operator for ROM basis ϕ
 """
-# function rom_convection_operator(ϕ, setup)
-#     # @warn("assuming time-independent boundary conditions")
-#     projected_convection(u,v) = 
-#         rom_project(tuple2vec(INS.convection()),ϕ)
-# end
+function rom_convection_operator(ϕ, setup)
+    # @warn("assuming time-independent boundary conditions")
+    projected_convection(u, v) = rom_project(
+        tuple2vec(convection(vec2tuple(u, setup), vec2tuple(v, setup), setup), setup),
+        ϕ,
+    )
+
+    u_0 = 0*ϕ[:,1]
+    y_C = projected_convection(u_0,u_0)
+
+    r = size(ϕ)[2]
+    C_r1 = zeros(r,r)
+    C_r2 = zeros(r,r,r)
+    for i = 1:r
+        u_i = ϕ[:,i]
+        C_r1[:,i] = projected_convection(u_i,u_0) + projected_convection(u_0,u_i) - 2*y_C
+        for j = 1:r
+            u_j = ϕ[:,j]
+            C_r2[:,i,j] = projected_convection(u_i,u_j) - projected_convection(u_i,u_0)
+             - projected_convection(u_0,u_j) + y_C
+        end
+    end
+
+    reshape(C_r2,r,r^2),C_r1,y_C
+end
 
 
 # # Option 1 (piracy)
