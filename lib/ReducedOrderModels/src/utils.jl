@@ -30,6 +30,9 @@ function vec2tuple(v,setup)
     u[1][Iu[1]] .= vx
     u[2][Iu[2]] .= vy
     INS.apply_bc_u!(u, 0.0, setup)
+    @warn("assuming time-independent boundary conditions")
+
+    u
 end
 
 export tuple2vec
