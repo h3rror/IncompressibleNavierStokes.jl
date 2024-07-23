@@ -43,4 +43,7 @@ end
 
     D_r, y_D = ROM.rom_diffusion_operator(ϕ, setup)
     @test D_r*astart + y_D ≈ ROM.rom_project(tuple2vec(INS.diffusion(ustart,setup),setup),ϕ)
+    # test symmetry and negative semi-definiteness of D_r
+    @test maximum(eigen(D_r).values) <= 0
+    @test D_r ≈ D_r'
 end
