@@ -51,9 +51,30 @@ scatter(svd_.S; axis = (; yscale = log10))
 astart = ROM.rom_project(tuple2vec(ustart,setup),ϕ)
 a,t = ROM.rom_timestep_loop(ϕ;setup,nstep = 10,astart)
 
-div = INS.divergence(vec2tuple(ROM.rom_reconstruct(a,ϕ),setup),setup)
-maximum(div[:])
-norm(div[:])
+div_ = INS.divergence(vec2tuple(ROM.rom_reconstruct(a,ϕ),setup),setup)
+maximum(div_[:])
+norm(div_[:])
+
+ROM.convection(ustart,ustart,setup)
+ROM.convection(ustart,ustart,setup) == INS.convection(ustart,setup)
+
+ustart_vec = tuple2vec(ustart)
+tuple2vec(ustart,setup)'*tuple2vec(INS.convection(ustart,setup),setup)
+tuple2vec(ustart,setup)'*tuple2vec(ROM.convection(ustart,ustart,setup),setup)
+
+u2 = vec2tuple(tuple2vec(ustart,setup) .^2,setup)
+
+tuple2vec(ustart,setup)'*tuple2vec(ROM.convection(u2,ustart,setup),setup)
+tuple2vec(ustart,setup)'*tuple2vec(ROM.convection(ustart,u2,setup),setup)
+
+u1 = vec2tuple(ϕ[:,1],setup)
+u2 = vec2tuple(ϕ[:,2],setup)
+
+tuple2vec(u1,setup)'*tuple2vec(ROM.convection(u2,u1,setup),setup)
+tuple2vec(u1,setup)'*tuple2vec(ROM.convection(u1,u2,setup),setup)
+tuple2vec(u1,setup)'*tuple2vec(ROM.convection(u1,u1,setup),setup)
+
+
 
 snapshots.u[1]
 snapshots.u[1][1]

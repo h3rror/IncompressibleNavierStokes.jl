@@ -8,6 +8,7 @@ using IncompressibleNavierStokes
 INS = IncompressibleNavierStokes
 
 include("utils.jl")
+include("INSupdates.jl")
 
 """
     create_snapshots(;
@@ -122,6 +123,18 @@ function rom_diffusion_operator(ϕ, setup)
 
     D_r, y_D
 end
+
+"""
+    rom_convection_operator(ϕ, setup)
+
+TBW
+"""
+# function rom_convection_operator(ϕ, setup)
+#     # @warn("assuming time-independent boundary conditions")
+#     projected_convection(u,v) = 
+#         rom_project(tuple2vec(INS.convection()),ϕ)
+# end
+
 
 # # Option 1 (piracy)
 # function INS.momentum(u::Vector, setup)

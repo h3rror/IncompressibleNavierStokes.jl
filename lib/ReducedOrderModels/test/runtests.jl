@@ -8,7 +8,6 @@ using Test
 
 using LinearAlgebra
 
-
 @testset "Arithmetic" begin
     @test 1 + 1 == 2
 end
@@ -37,13 +36,22 @@ end
     Δt = 0.01
     a, t = ROM.rom_timestep_loop(ϕ; setup, nstep, astart, Δt)
 
-    @test t ≈ nstep*Δt
+    @test t ≈ nstep * Δt
     @test typeof(a) == typeof(astart)
-    @test norm(INS.divergence(vec2tuple(ROM.rom_reconstruct(a,ϕ),setup),setup)) < 1e-8
+    @test norm(INS.divergence(vec2tuple(ROM.rom_reconstruct(a, ϕ), setup), setup)) < 1e-8
 
     D_r, y_D = ROM.rom_diffusion_operator(ϕ, setup)
-    @test D_r*astart + y_D ≈ ROM.rom_project(tuple2vec(INS.diffusion(ustart,setup),setup),ϕ)
+    @test D_r * astart + y_D ≈
+          ROM.rom_project(tuple2vec(INS.diffusion(ustart, setup), setup), ϕ)
     # test symmetry and negative semi-definiteness of D_r
     @test maximum(eigen(D_r).values) <= 0
     @test D_r ≈ D_r'
+
+    @test ROM.convection(ustart, ustart, setup) == INS.convection(ustart, setup)
+
+    u1 = vec2tuple(ϕ[:, 1], setup)
+    u2 = vec2tuple(ϕ[:, 2], setup)
+
+    @test tuple2vec(u1, setup)' * tuple2vec(ROM.convection(u1, u2, setup), setup) < 1e-15 
+    @test tuple2vec(u1, setup)' * tuple2vec(ROM.convection(u1, u1, setup), setup) < 1e-15
 end
