@@ -10,7 +10,9 @@ INS = IncompressibleNavierStokes
 
 using CairoMakie
 using GLMakie
-using IncompressibleNavierStokes
+# using IncompressibleNavierStokes
+
+using LinearAlgebra
 
 # Reynolds number
 Re = 2000.0
@@ -49,8 +51,9 @@ scatter(svd_.S; axis = (; yscale = log10))
 astart = ROM.rom_project(tuple2vec(ustart,setup),ϕ)
 a,t = ROM.rom_timestep_loop(ϕ;setup,nstep = 10,astart)
 
-INS.divergence(vec2tuple(ROM.rom_reconstruct(a,ϕ),setup),setup)
-
+div = INS.divergence(vec2tuple(ROM.rom_reconstruct(a,ϕ),setup),setup)
+maximum(div[:])
+norm(div[:])
 
 snapshots.u[1]
 snapshots.u[1][1]

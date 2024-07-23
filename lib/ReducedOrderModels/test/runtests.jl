@@ -40,4 +40,7 @@ end
     @test t ≈ nstep*Δt
     @test typeof(a) == typeof(astart)
     @test norm(INS.divergence(vec2tuple(ROM.rom_reconstruct(a,ϕ),setup),setup)) < 1e-8
+
+    D_r, y_D = ROM.rom_diffusion_operator(ϕ, setup)
+    @test D_r*astart + y_D ≈ ROM.rom_project(tuple2vec(INS.diffusion(ustart,setup),setup),ϕ)
 end

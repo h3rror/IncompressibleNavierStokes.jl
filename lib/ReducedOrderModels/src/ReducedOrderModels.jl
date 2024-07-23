@@ -62,8 +62,6 @@ function create_snapshots(;
     (; u, t)
 end
 
-
-
 """
     rom_timestep_loop(ϕ;
     setup,
@@ -77,7 +75,8 @@ end
     Simple time-stepping method for ROMs;
     should later be replaced by multiple-dsipatching existing time-stepping code
 """
-function rom_timestep_loop(ϕ;
+function rom_timestep_loop(
+    ϕ;
     setup,
     nstep,
     astart,
@@ -88,28 +87,48 @@ function rom_timestep_loop(ϕ;
     a = astart
     t = tstart
     for i = 1:nstep
-        u_vec = rom_reconstruct(a,ϕ)
-        u = vec2tuple(u_vec,setup)
+        u_vec = rom_reconstruct(a, ϕ)
+        u = vec2tuple(u_vec, setup)
         INS.apply_bc_u!(u, t, setup)
         F = INS.momentum(u, nothing, t, setup)
         INS.apply_bc_u!(F, t, setup; dudt = true)
         dudt = INS.project(F, setup; psolver)
-        dudt_vec = tuple2vec(dudt,setup)
-        dadt = rom_project(dudt_vec,ϕ)
+        dudt_vec = tuple2vec(dudt, setup)
+        dadt = rom_project(dudt_vec, ϕ)
         a = a + Δt * dadt
         t = t + Δt
     end
 
-    a,t
+    a, t
 end
 
+"""
+    rom_diffusion_operator(ϕ,setup)
+
+    precompute ROM diffusion operator for ROM basis ϕ
+"""
+function rom_diffusion_operator(ϕ, setup)
+    # @warn("assuming time-independent boundary conditions")
+    projected_diffusion(u) =
+        rom_project(tuple2vec(INS.diffusion(vec2tuple(u, setup), setup), setup), ϕ)
+
+    y_D = projected_diffusion(0 * ϕ[:, 1])
+
+    r = size(ϕ)[2]
+    D_r = zeros(r, r)
+    for i = 1:r
+        D_r[:, i] = projected_diffusion(ϕ[:, i]) - y_D
+    end
+
+    D_r, y_D
+end
 
 # # Option 1 (piracy)
 # function INS.momentum(u::Vector, setup)
 #     ...
 # end
 
-# # Option 2
+# # Option 2 -> preferred!!!
 # struct ROMState
 #     a::Vector
 # end
@@ -119,6 +138,5 @@ end
 
 # # Option 3: Functional
 # timestep(; rhs = rom_momentum)
-
 
 end # module ReducedOrderModels
