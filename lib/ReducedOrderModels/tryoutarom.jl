@@ -58,7 +58,7 @@ norm(div_[:])
 ROM.convection(ustart,ustart,setup)
 ROM.convection(ustart,ustart,setup) == INS.convection(ustart,setup)
 
-ustart_vec = tuple2vec(ustart)
+ustart_vec = tuple2vec(ustart,setup)
 tuple2vec(ustart,setup)'*tuple2vec(INS.convection(ustart,setup),setup)
 tuple2vec(ustart,setup)'*tuple2vec(ROM.convection(ustart,ustart,setup),setup)
 
@@ -76,6 +76,15 @@ tuple2vec(u1,setup)'*tuple2vec(ROM.convection(u1,u1,setup),setup)
 
 C_r2,C_r1,y_C = ROM.rom_convection_operator(ϕ,setup)
 
+ROM_setup = ROM.rom_operators(ϕ, setup)
+
+nstep = 10
+Δt = 0.01
+ROM.rom_timestep_loop_efficient(ROM_setup; setup, nstep, astart, Δt)
+
+ROM.rom_diffusion(a, ROM_setup)
+b = a
+ROM.rom_convection(a, b, ROM_setup)
 
 snapshots.u[1]
 snapshots.u[1][1]

@@ -64,4 +64,24 @@ end
     # test block-skew-symmetry of C_r2
     C_r2_tensor = reshape(C_r2,r,r,r)
     @test norm(C_r2_tensor+permutedims(C_r2_tensor,[2 1 3])) <= sqrt(eps())
+
+    ROM_setup = ROM.rom_operators(ϕ,setup)
+    @test D_r == ROM_setup.D_r
+    @test y_D == ROM_setup.y_D
+    @test C_r2 == ROM_setup.C_r2
+    @test C_r1 == ROM_setup.C_r1
+    @test y_C == ROM_setup.y_C
+
+    @test ROM.rom_diffusion(a_rand,ROM_setup) == D_r * a_rand + y_D
+    @test ROM.rom_convection(a_rand,a_rand,ROM_setup) ==
+                C_r2*kron(a_rand,a_rand) + C_r1*a_rand + y_C
+
+    # test energy conservation of precomputed ROMconvection operator 
+    # (for differing velocities)
+    @test a_rand'*C_r2*kron(astart,a_rand) < sqrt(eps())
+    @test a_rand'*C_r2*kron(a_rand,a_rand) < sqrt(eps())
+
+    a_eff, t_eff = ROM.rom_timestep_loop_efficient(ROM_setup; setup, nstep, astart, Δt)
+    @test t_eff ≈ t
+    @test a_eff ≈ a
 end

@@ -74,7 +74,7 @@ end
 )
 
     Simple time-stepping method for ROMs;
-    should later be replaced by multiple-dsipatching existing time-stepping code
+    should later be replaced by multiple-dispatching existing time-stepping code
 """
 function rom_timestep_loop(
     ϕ;
@@ -104,6 +104,62 @@ function rom_timestep_loop(
 end
 
 """
+    rom_timestep_loop_efficient(ϕ;
+    setup,
+    nstep,
+    astart,
+    Δt = 0.01,
+    tstart = 0,
+    psolver = default_psolver(setup),
+)
+
+    Simple time-stepping method for ROMs with precomputed ROM operators;
+    should later be replaced by multiple-dispatching existing time-stepping code
+"""
+function rom_timestep_loop_efficient(
+    ROM_setup;
+    setup,
+    nstep,
+    astart,
+    Δt = 0.01,
+    tstart = 0,
+    psolver = default_psolver(setup),
+)
+    a = astart
+    t = tstart
+    for i = 1:nstep
+        F = rom_momentum(a,a, ROM_setup)
+        dadt = F
+        a = a + Δt * dadt
+        t = t + Δt
+    end
+
+    a, t
+end
+
+"""
+    rom_momentum(a, b, ROM_setup)
+
+    compute momentum equation RHS for convecting ROM coefficient vector a and 
+    diffusing and convected ROM coefficient vector b
+"""
+function rom_momentum(a, b, ROM_setup)
+    rom_diffusion(b, ROM_setup) + rom_convection(a, b, ROM_setup)
+end
+
+"""
+    rom_operators(ϕ,setup)
+
+    Collects precomputated ROM operators in ROM_setup to facilitate access
+"""
+function rom_operators(ϕ, setup)
+    D_r, y_D = rom_diffusion_operator(ϕ, setup)
+    C_r2, C_r1, y_C = rom_convection_operator(ϕ, setup)
+
+    (; D_r, y_D, C_r2, C_r1, y_C)
+end
+
+"""
     rom_diffusion_operator(ϕ,setup)
 
     precompute ROM diffusion operator for ROM basis ϕ
@@ -125,9 +181,21 @@ function rom_diffusion_operator(ϕ, setup)
 end
 
 """
+    rom_diffusion(a, ROM_setup)
+
+    compute diffusion contribution to momentum equation for ROM coefficient vector a
+"""
+rom_diffusion(a, ROM_setup) = ROM_setup.D_r * a + ROM_setup.y_D
+
+"""
     rom_convection_operator(ϕ, setup)
 
     precompute ROM diffusion operator for ROM basis ϕ
+
+    note: for inhomogeneous boundary conditions and differing convecting and convected velocities,
+    C_r1 should be split into 
+    C_r1a[:,i] = projected_convection(u_i, u_0) - y_C
+    C_r1b[:,i] = projected_convection(u_0, u_i) -  y_C
 """
 function rom_convection_operator(ϕ, setup)
     # @warn("assuming time-independent boundary conditions")
@@ -136,25 +204,37 @@ function rom_convection_operator(ϕ, setup)
         ϕ,
     )
 
-    u_0 = 0*ϕ[:,1]
-    y_C = projected_convection(u_0,u_0)
+    u_0 = 0 * ϕ[:, 1]
+    y_C = projected_convection(u_0, u_0)
 
     r = size(ϕ)[2]
-    C_r1 = zeros(r,r)
-    C_r2 = zeros(r,r,r)
+    C_r1 = zeros(r, r)
+    C_r2 = zeros(r, r, r)
     for i = 1:r
-        u_i = ϕ[:,i]
-        C_r1[:,i] = projected_convection(u_i,u_0) + projected_convection(u_0,u_i) - 2*y_C
+        u_i = ϕ[:, i]
+        C_r1[:, i] =
+            projected_convection(u_i, u_0) + projected_convection(u_0, u_i) - 2 * y_C
         for j = 1:r
-            u_j = ϕ[:,j]
-            C_r2[:,i,j] = projected_convection(u_i,u_j) - projected_convection(u_i,u_0)
-             - projected_convection(u_0,u_j) + y_C
+            u_j = ϕ[:, j]
+            C_r2[:, i, j] = projected_convection(u_i, u_j) - projected_convection(u_i, u_0)
+            -projected_convection(u_0, u_j) + y_C
         end
     end
 
-    reshape(C_r2,r,r^2),C_r1,y_C
+    reshape(C_r2, r, r^2), C_r1, y_C
 end
 
+"""
+    rom_convection(a, b, ROM_setup)
+
+    compute convection contribution to momentum equation for convecting ROM coefficient vector a
+    and convected ROM coefficient vector b,
+    i.e. b'*C_r2*kron(a,b) = 0 for all a,b with a divergence-free
+"""
+function rom_convection(a, b, ROM_setup)
+    # @warn("if a=/= b, assuming homogeneous boundary conditions")
+    ROM_setup.C_r2 * kron(a, b) + ROM_setup.C_r1*a + ROM_setup.y_C
+end
 
 # # Option 1 (piracy)
 # function INS.momentum(u::Vector, setup)

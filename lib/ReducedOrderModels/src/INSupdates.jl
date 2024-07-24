@@ -18,6 +18,7 @@ struct Offset{D} end # better: reuse INS code
     i.e. the inner product of u and convection(u,v,setup) is 0 if v is divergence-free
 """
 function convection!(F, u, v, setup)
+    # @warn("check with Syver what I did here. I have no idea")
     (; grid, workgroupsize) = setup
     (; dimension, Δ, Δu, Nu, Iu, A) = grid
     D = dimension()
