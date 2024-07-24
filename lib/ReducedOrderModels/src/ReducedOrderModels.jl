@@ -3,12 +3,25 @@ module ReducedOrderModels
 using IncompressibleNavierStokes
 # using IncompressibleNavierStokes: apply_bc_u!
 
-# using LinearAlgebra
+using LinearAlgebra
 
 INS = IncompressibleNavierStokes
 
 include("utils.jl")
 include("INSupdates.jl")
+
+# introduce new type to enable multiple-dispatch without unintended side-effects
+# struct ROMstate
+#     a::Vector
+# end
+struct ROMstate <: AbstractVector{Float64}
+    a::Vector{Float64}
+end
+# Base.linearindexing(::Type{ROMstate}) = Base.LinearFast()
+Base.size(m::ROMstate) = size(m.a)
+Base.getindex(m::ROMstate,i::Int) = m.a[i]
+Base.setindex!(m::ROMstate,v::Float64,i::Int) = m.a[i] = v
+Base.similar(m::ROMstate, dims::Tuple{Int}) = ROMstate(Vector{Float64}(dims[1]))
 
 """
     create_snapshots(;
@@ -128,7 +141,7 @@ function rom_timestep_loop_efficient(
     a = astart
     t = tstart
     for i = 1:nstep
-        F = rom_momentum(a,a, ROM_setup)
+        F = rom_momentum(a, a, ROM_setup)
         dadt = F
         a = a + Δt * dadt
         t = t + Δt
@@ -233,7 +246,7 @@ end
 """
 function rom_convection(a, b, ROM_setup)
     # @warn("if a=/= b, assuming homogeneous boundary conditions")
-    ROM_setup.C_r2 * kron(a, b) + ROM_setup.C_r1*a + ROM_setup.y_C
+    ROM_setup.C_r2 * kron(a, b) + ROM_setup.C_r1 * a + ROM_setup.y_C
 end
 
 # # Option 1 (piracy)

@@ -86,6 +86,10 @@ ROM.rom_diffusion(a, ROM_setup)
 b = a
 ROM.rom_convection(a, b, ROM_setup)
 
+rs = ROM.ROMstate(a)
+
+
+
 snapshots.u[1]
 snapshots.u[1][1]
 snapshots.u[1][1][setup.grid.Iu[1]]
