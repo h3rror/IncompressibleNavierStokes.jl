@@ -4,6 +4,8 @@
 # Ideally, such functions are only introduced if multiple dispatch or other ways of reusing 
 # existing code are not possible
 
+# Maybe this function should be integrated into INS via a pull-request?
+
 using KernelAbstractions
 
 struct Offset{D} end # better: reuse INS code
