@@ -55,6 +55,12 @@ jobs:
             using Pkg
             Pkg.activate("lib/NeuralClosure")
             Pkg.test(; coverage=true)
+      - name: Test ReducedOrderModels
+        shell: julia --color=yes {0}
+        run: |
+            using Pkg
+            Pkg.activate("lib/ReducedOrderModels")
+            Pkg.test(; coverage=true)
       # - uses: julia-actions/julia-runtest@v1
       #   with:
       #     annotate: true
