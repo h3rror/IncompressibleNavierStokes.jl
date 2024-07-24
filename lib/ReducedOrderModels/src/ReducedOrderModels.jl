@@ -14,14 +14,29 @@ include("INSupdates.jl")
 # struct ROMstate
 #     a::Vector
 # end
-struct ROMstate <: AbstractVector{Float64}
-    a::Vector{Float64}
+# struct ROMstate <: AbstractVector{Float64}
+struct ROMstate <: AbstractMatrix{Float64}
+    a::Matrix{Float64}
 end
+ROMstate(v::Vector) = ROMstate(v[:, :])
 # Base.linearindexing(::Type{ROMstate}) = Base.LinearFast()
 Base.size(m::ROMstate) = size(m.a)
-Base.getindex(m::ROMstate,i::Int) = m.a[i]
-Base.setindex!(m::ROMstate,v::Float64,i::Int) = m.a[i] = v
+Base.getindex(m::ROMstate, i::Int) = m.a[:][i]
+Base.getindex(m::ROMstate, i::Int, j::Int) = m.a[i, j]
+Base.setindex!(m::ROMstate, v::Float64, i::Int) = m.a[i] = v
 Base.similar(m::ROMstate, dims::Tuple{Int}) = ROMstate(Vector{Float64}(dims[1]))
+# for op in (:+, :-)
+#     @eval ($op)(a::ROMstate, b::ROMstate) = ROMstate(($op)(a.x, b.x))
+# end
+
+# Base.:+(a::ROMstate, b::ROMstate) = ROMstate(+(a.a, b.a))
+Base.:+(a::ROMstate, b::ROMstate) = ROMstate(+(a.a, b.a))
+Base.:*(a::Number, b::ROMstate) = ROMstate(*(a, b.a))
+# Base.+(a::ROMstate, b::ROMstate) = 4
+
+# for op in (:*)
+#     @eval ($op)(a::Number, b::ROMstate) = ROMstate(($op)(a,b.x))
+# end
 
 """
     create_snapshots(;
@@ -93,11 +108,11 @@ function rom_timestep_loop(
     ϕ;
     setup,
     nstep,
-    astart,
+    astart::ROMstate,
     Δt = 0.01,
     tstart = 0,
     psolver = default_psolver(setup),
-)
+)::Tuple{ROMstate,Float64}
     a = astart
     t = tstart
     for i = 1:nstep
@@ -133,7 +148,7 @@ function rom_timestep_loop_efficient(
     ROM_setup;
     setup,
     nstep,
-    astart,
+    astart::ROMstate,
     Δt = 0.01,
     tstart = 0,
     psolver = default_psolver(setup),

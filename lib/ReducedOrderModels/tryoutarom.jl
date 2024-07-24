@@ -1,6 +1,10 @@
 using ReducedOrderModels
 ROM = ReducedOrderModels
 
+Base.:+(a::ROMstate, b::ROMstate) = ROMstate(Base.+(a.x, b.x))
+Base.+() = ROMstate(Base.+(a.x, b.x))
+
+
 using IncompressibleNavierStokes
 INS = IncompressibleNavierStokes
 
@@ -48,8 +52,11 @@ r = 10
 CairoMakie.activate!()
 scatter(svd_.S; axis = (; yscale = log10))
 
+ROM.rom_project(ϕ, ϕ) ≈ I(r)
+
 astart = ROM.rom_project(tuple2vec(ustart,setup),ϕ)
 a,t = ROM.rom_timestep_loop(ϕ;setup,nstep = 10,astart)
+a_,t = ROM.rom_timestep_loop(ϕ;setup,nstep = 10,astart)
 
 div_ = INS.divergence(vec2tuple(ROM.rom_reconstruct(a,ϕ),setup),setup)
 maximum(div_[:])

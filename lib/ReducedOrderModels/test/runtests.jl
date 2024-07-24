@@ -28,7 +28,7 @@ end
     @test ϕ' * ϕ ≈ I(r)
 
     @test ROM.rom_project(ϕ, ϕ) ≈ I(r)
-    a_rand = rand(r)
+    a_rand = ROM.ROMstate(rand(r))
     u_rand_vec = ROM.rom_reconstruct(a_rand,ϕ)
     @test ROM.rom_project(u_rand_vec, ϕ) ≈ a_rand
 
@@ -78,8 +78,9 @@ end
 
     # test energy conservation of precomputed ROMconvection operator 
     # (for differing velocities)
-    @test a_rand'*C_r2*kron(astart,a_rand) < sqrt(eps())
-    @test a_rand'*C_r2*kron(a_rand,a_rand) < sqrt(eps())
+    @test (a_rand'*C_r2*kron(astart,a_rand))[] < sqrt(eps())
+    @test (a_rand'*C_r2*kron(a_rand,a_rand))[] < sqrt(eps())
+    # ( ... )[] is used to cast 1x1 Matrix to scalar
 
     a_eff, t_eff = ROM.rom_timestep_loop_efficient(ROM_setup; setup, nstep, astart, Δt)
     @test t_eff ≈ t

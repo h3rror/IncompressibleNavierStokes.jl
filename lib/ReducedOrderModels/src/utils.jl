@@ -71,7 +71,8 @@ end
 
     Project FOM velocity u onto ROM basis ϕ to obtain ROM coefficient vector a
 """
-function rom_project(u,ϕ)
+function rom_project(u,ϕ)::ROMstate
     a = ϕ'*u
+    ROMstate(a)
 end
 
